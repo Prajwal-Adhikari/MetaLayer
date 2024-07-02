@@ -90,18 +90,24 @@ contract ExecutorFacet is ZkSyncHyperchainBase, IExecutor {
             logOutput.blobHashes
         );
 
-        return
-            StoredBatchInfo({
-                batchNumber: _newBatch.batchNumber,
-                batchHash: _newBatch.newStateRoot,
-                indexRepeatedStorageChanges: _newBatch.indexRepeatedStorageChanges,
-                numberOfLayer1Txs: _newBatch.numberOfLayer1Txs,
-                priorityOperationsHash: _newBatch.priorityOperationsHash,
-                l2LogsTreeRoot: logOutput.l2LogsTreeRoot,
-                timestamp: _newBatch.timestamp,
-                commitment: commitment,
-                headers: _newBatch.headers
-            });
+        //prz: Let me cook, solving calldata to storage issue
+        StoredBatchInfo memory newStorageBatchInfo;
+        //prz: Copy simple types directly
+        newStorageBatchInfo.batchNumber = _newBatch.batchNumber;
+        newStorageBatchInfo.batchHash = _newBatch.newStateRoot;
+        newStorageBatchInfo.indexRepeatedStorageChanges = _newBatch.indexRepeatedStorageChanges;
+        newStorageBatchInfo.numberOfLayer1Txs = _newBatch.numberOfLayer1Txs;
+        newStorageBatchInfo.priorityOperationsHash = _newBatch.priorityOperationsHash;
+        newStorageBatchInfo.l2LogsTreeRoot = logOutput.l2LogsTreeRoot;
+        newStorageBatchInfo.timestamp = _newBatch.timestamp;
+        newStorageBatchInfo.commitment = commitment;
+
+        //prz: Copy array of struct (headers)
+        newStorageBatchInfo.headers = new HeaderUpdate[](_newBatch.headers.length);
+        for (uint256 i = 0; i < _newBatch.headers.length; i++) {
+            newStorageBatchInfo.headers[i] = _newBatch.headers[i];
+        }
+        return newStorageBatchInfo;
     }
 
     /// @notice checks that the timestamps of both the new batch and the new L2 block are correct.
